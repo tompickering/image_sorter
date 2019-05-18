@@ -36,9 +36,11 @@ def image_generator():
 
 
 class ImageDisplayer(object):
+    WINDOW_SIZE = (640, 480)
+
     def __init__(self):
         # Initialise window
-        self.window = sdl2.ext.Window('Image Sorter', (640, 480))
+        self.window = sdl2.ext.Window('Image Sorter', self. WINDOW_SIZE)
         self.window.show()
         # Image generator
         self.image_file = None
@@ -46,11 +48,33 @@ class ImageDisplayer(object):
         # Show first image
         self.show_next_image()
 
+    def find_scaled_dstrect(self, img):
+        try:
+            win = self.window.get_surface()
+            win_dydx = win.w / win.h
+            img_dydx = img.w / img.h
+            if img_dydx < win_dydx:
+                # Image proportions are too tall - return narrower dstrect
+                sf = img_dydx / win_dydx
+                dst_w = int(win.w * sf)
+                dst_x = (win.w - dst_w) // 2
+                return sdl2.SDL_Rect(dst_x, 0, dst_w, win.h)
+            elif img_dydx > win_dydx:
+                # Image proportions are too wide - return shorter dstrect
+                sf = win_dydx / img_dydx
+                dst_h = int(win.h * sf)
+                dst_y = (win.h - dst_h) // 2
+                return sdl2.SDL_Rect(0, dst_y, win.w, dst_h)
+        except ZeroDivisionError:
+            return None
+        # Window is perfectly proportioned for image - just use default behaviour
+        return None
+
     def show_next_image(self):
         try:
             self.image_file, image = next(self.images)
             sdl2.ext.fill(self.window.get_surface(), 0)
-            sdl2.SDL_BlitSurface(image, None, self.window.get_surface(), None)
+            sdl2.SDL_BlitScaled(image, None, self.window.get_surface(), self.find_scaled_dstrect(image))
             time.sleep(0.05)  # FIXME: It seems there's a race condiion on displaying the first image correctly...
             sdl2.SDL_UpdateWindowSurface(self.window.window)
         except StopIteration:
