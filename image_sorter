@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 
 import os
+import sys
 import time
 import ctypes
 import shutil
+
+# On Windows, this should point to the directory where SDL2.dll is stored
+# os.environ["PYSDL2_DLL_PATH"] = "C:\\Users\\Home\\DLL"
 
 import sdl2
 import sdl2.ext
@@ -20,15 +24,14 @@ except FileExistsError:
     pass
 
 sdl2.ext.init()
-running = True
 
 
 def image_generator():
     for img_file in os.listdir(cwd):
         try:
             yield img_file, sdl2.ext.load_image(img_file)
-        except OSError:
-            # Not an image file - ignore it
+        except (OSError, sdl2.ext.common.SDLError):
+            # Can't load this file as an image - ignore it
             continue
 
 
@@ -60,16 +63,25 @@ class ImageDisplayer(object):
         shutil.copy2(self.image_file, dest_path)
 
 
-displayer = ImageDisplayer()
-event = sdl2.SDL_Event()
-while running:
-    while sdl2.SDL_PollEvent(ctypes.byref(event)) != 0:
-        if event.type == sdl2.SDL_QUIT:
-            running = False
-        elif event.type == sdl2.SDL_KEYDOWN:
-            keysym = event.key.keysym.sym
-            if keysym == KEEP_KEY:
-                displayer.save_image()
-            running = displayer.show_next_image()
+def run():
+    running = True
+    displayer = ImageDisplayer()
+    event = sdl2.SDL_Event()
+    while running:
+        while sdl2.SDL_PollEvent(ctypes.byref(event)) != 0:
+            if event.type == sdl2.SDL_QUIT:
+                running = False
+            elif event.type == sdl2.SDL_KEYDOWN:
+                keysym = event.key.keysym.sym
+                if keysym == KEEP_KEY:
+                    displayer.save_image()
+                running = displayer.show_next_image()
+
+try:
+    run()
+except Exception as e:
+    print('Unexpected error:')
+    import traceback
+    traceback.print_exception(*sys.exc_info())
 
 sdl2.ext.quit()
