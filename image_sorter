@@ -40,7 +40,7 @@ class ImageDisplayer(object):
 
     def __init__(self):
         # Initialise window
-        self.window = sdl2.ext.Window('Image Sorter', self. WINDOW_SIZE)
+        self.window = sdl2.ext.Window('Image Sorter', self.WINDOW_SIZE)
         self.window.show()
         # Image generator
         self.image_file = None
