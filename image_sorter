@@ -27,7 +27,7 @@ sdl2.ext.init()
 
 
 def image_generator():
-    for img_file in os.listdir(cwd):
+    for img_file in sorted(os.listdir(cwd)):
         try:
             yield img_file, sdl2.ext.load_image(img_file)
         except (OSError, sdl2.ext.common.SDLError):
