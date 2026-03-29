@@ -101,11 +101,13 @@ def run():
                     displayer.save_image()
                 running = displayer.show_next_image()
 
-try:
-    run()
-except Exception as e:
-    print('Unexpected error:')
-    import traceback
-    traceback.print_exception(*sys.exc_info())
+
+if __name__ == '__main__':
+    try:
+        run()
+    except Exception as e:
+        print('Unexpected error:')
+        import traceback
+        traceback.print_exception(*sys.exc_info())
 
 sdl2.ext.quit()
