@@ -5,6 +5,7 @@ import sys
 import time
 import ctypes
 import shutil
+import argparse
 
 # On Windows, this should point to the directory where SDL2.dll is stored
 # os.environ["PYSDL2_DLL_PATH"] = "C:\\Users\\Home\\DLL"
@@ -12,23 +13,15 @@ import shutil
 import sdl2
 import sdl2.ext
 
-KEEP_DIR = 'KEEP'
 KEEP_KEY = sdl2.SDLK_RETURN
-
-cwd = os.getcwd()
-
-# Make keep directory
-try:
-    os.mkdir(KEEP_DIR)
-except FileExistsError:
-    pass
 
 sdl2.ext.init()
 
 
-def image_generator():
-    for img_file in sorted(os.listdir(cwd)):
+def image_generator(src):
+    for img_name in sorted(os.listdir(src)):
         try:
+            img_file = os.path.join(src, img_name)
             yield img_file, sdl2.ext.load_image(img_file)
         except (OSError, sdl2.ext.common.SDLError):
             # Can't load this file as an image - ignore it
@@ -38,13 +31,14 @@ def image_generator():
 class ImageDisplayer(object):
     WINDOW_SIZE = (640, 480)
 
-    def __init__(self):
+    def __init__(self, args):
+        self.args = args
         # Initialise window
         self.window = sdl2.ext.Window('Image Sorter', self.WINDOW_SIZE)
         self.window.show()
         # Image generator
         self.image_file = None
-        self.images = image_generator()
+        self.images = image_generator(args.src)
         # Show first image
         self.show_next_image()
 
@@ -83,13 +77,13 @@ class ImageDisplayer(object):
 
     def save_image(self):
         # Save image
-        dest_path = os.path.join(KEEP_DIR, self.image_file)
+        dest_path = os.path.join(args.dst, os.path.basename(self.image_file))
         shutil.copy2(self.image_file, dest_path)
 
 
-def run():
+def run(args):
     running = True
-    displayer = ImageDisplayer()
+    displayer = ImageDisplayer(args)
     event = sdl2.SDL_Event()
     while running:
         while sdl2.SDL_PollEvent(ctypes.byref(event)) != 0:
@@ -103,8 +97,22 @@ def run():
 
 
 if __name__ == '__main__':
+
+    cwd = os.getcwd()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-s', '--src', default=cwd, help='Source directory')
+    parser.add_argument('-d', '--dst', default='KEEP', help='Destination directory')
+
+    args = parser.parse_args()
+
     try:
-        run()
+        os.mkdir(args.dst)
+    except FileExistsError:
+        pass
+
+    try:
+        run(args)
     except Exception as e:
         print('Unexpected error:')
         import traceback
