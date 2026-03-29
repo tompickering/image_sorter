@@ -6,6 +6,7 @@ import time
 import ctypes
 import shutil
 import argparse
+import subprocess
 
 # On Windows, this should point to the directory where SDL2.dll is stored
 # os.environ["PYSDL2_DLL_PATH"] = "C:\\Users\\Home\\DLL"
@@ -33,6 +34,7 @@ class ImageDisplayer(object):
 
     def __init__(self, args):
         self.args = args
+        self.md5s = set()
         # Initialise window
         self.window = sdl2.ext.Window('Image Sorter', self.WINDOW_SIZE)
         self.window.show()
@@ -66,7 +68,18 @@ class ImageDisplayer(object):
 
     def show_next_image(self):
         try:
-            self.image_file, image = next(self.images)
+            image = None
+
+            while True:
+                self.image_file, image = next(self.images)
+                p = subprocess.run(['md5sum', self.image_file], stdout=subprocess.PIPE)
+                md5 = p.stdout.split(b' ')[0].strip()
+                if md5 in self.md5s:
+                    print(f'Skipping duplicate: {self.image_file}')
+                    continue
+                self.md5s.add(md5)
+                break
+
             sdl2.ext.fill(self.window.get_surface(), 0)
             sdl2.SDL_BlitScaled(image, None, self.window.get_surface(), self.find_scaled_dstrect(image))
             time.sleep(0.05)  # FIXME: It seems there's a race condiion on displaying the first image correctly...
