@@ -84,6 +84,7 @@ class ImageDisplayer(object):
             sdl2.SDL_BlitScaled(image, None, self.window.get_surface(), self.find_scaled_dstrect(image))
             time.sleep(0.05)  # FIXME: It seems there's a race condiion on displaying the first image correctly...
             sdl2.SDL_UpdateWindowSurface(self.window.window)
+            sdl2.SDL_FreeSurface(image)
         except StopIteration:
             return False
         return True
