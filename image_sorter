@@ -2,6 +2,7 @@
 
 import os
 import sys
+import re
 import time
 import ctypes
 import shutil
@@ -92,6 +93,19 @@ class ImageDisplayer(object):
     def save_image(self):
         # Save image
         dest_path = os.path.join(args.dst, os.path.basename(self.image_file))
+
+        while os.path.exists(dest_path):
+            base, _, ext = dest_path.rpartition('.')
+            m = re.match('(.*_)([0-9]+)', base)
+
+            if m:
+                n = int(m.groups()[1])
+                base = f'{m.groups()[0]}{n+1}'
+            else:
+                base = f'{base}_1'
+
+            dest_path = '.'.join([base, ext])
+
         shutil.copy2(self.image_file, dest_path)
 
 
