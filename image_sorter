@@ -26,6 +26,8 @@ KEEP_KEYS = { sdl2.SDLK_RETURN }
 UNDO_KEYS = { sdl2.SDLK_BACKSPACE, sdl2.SDLK_u }
 QUIT_KEYS = { sdl2.SDLK_ESCAPE, sdl2.SDLK_q }
 
+PREFIX = ''
+
 sdl2.ext.init()
 
 
@@ -43,7 +45,7 @@ def image_generator(src, jump):
 
 
 def Action_CopyToDirectory(image_file, args):
-    dest_path = os.path.join(args.dst, os.path.basename(image_file))
+    dest_path = os.path.join(args.dst, PREFIX + os.path.basename(image_file))
 
     print(f'{GREEN}Copying{END}: {dest_path}')
 
@@ -184,7 +186,6 @@ def run(args):
 
 
 if __name__ == '__main__':
-
     cwd = os.getcwd()
 
     parser = argparse.ArgumentParser()
@@ -193,6 +194,9 @@ if __name__ == '__main__':
     parser.add_argument('-j', '--jump', default='', help='Jump to')
 
     args = parser.parse_args()
+
+    if args.src != cwd:
+        PREFIX = f"{args.src.replace('/', '_')}_"
 
     try:
         os.mkdir(args.dst)
