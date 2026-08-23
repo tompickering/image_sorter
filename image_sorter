@@ -18,9 +18,9 @@ import sdl2.ext
 
 from collections import OrderedDict
 
-KEEP_KEY = sdl2.SDLK_RETURN
-UNDO_KEY = sdl2.SDLK_u
-QUIT_KEY = sdl2.SDLK_q
+KEEP_KEYS = { sdl2.SDLK_RETURN }
+UNDO_KEYS = { sdl2.SDLK_BACKSPACE, sdl2.SDLK_u }
+QUIT_KEYS = { sdl2.SDLK_ESCAPE, sdl2.SDLK_q }
 
 sdl2.ext.init()
 
@@ -169,12 +169,12 @@ def run(args):
                 running = False
             elif event.type == sdl2.SDL_KEYDOWN:
                 keysym = event.key.keysym.sym
-                if keysym == UNDO_KEY:
+                if keysym in UNDO_KEYS:
                     displayer.undo()
-                elif keysym == QUIT_KEY:
+                elif keysym in QUIT_KEYS:
                     running = False
                 else:
-                    if keysym == KEEP_KEY:
+                    if keysym in KEEP_KEYS:
                         displayer.action_image()
                     running = displayer.show_next_image()
 
