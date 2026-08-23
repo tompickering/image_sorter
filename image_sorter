@@ -20,6 +20,7 @@ from collections import OrderedDict
 
 KEEP_KEY = sdl2.SDLK_RETURN
 UNDO_KEY = sdl2.SDLK_u
+QUIT_KEY = sdl2.SDLK_q
 
 sdl2.ext.init()
 
@@ -170,6 +171,8 @@ def run(args):
                 keysym = event.key.keysym.sym
                 if keysym == UNDO_KEY:
                     displayer.undo()
+                elif keysym == QUIT_KEY:
+                    running = False
                 else:
                     if keysym == KEEP_KEY:
                         displayer.action_image()
