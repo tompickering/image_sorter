@@ -34,7 +34,7 @@ def image_generator(src, jump):
 
 
 class ImageDisplayer(object):
-    WINDOW_SIZE = (640, 480)
+    WINDOW_SIZE = (720, 1200)
 
     def __init__(self, args):
         self.args = args
