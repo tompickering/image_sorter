@@ -20,8 +20,11 @@ KEEP_KEY = sdl2.SDLK_RETURN
 sdl2.ext.init()
 
 
-def image_generator(src):
+def image_generator(src, jump):
     for img_name in sorted(os.listdir(src)):
+        if jump and img_name != jump:
+            continue
+        jump = None
         try:
             img_file = os.path.join(src, img_name)
             yield img_file, sdl2.ext.load_image(img_file)
@@ -41,7 +44,7 @@ class ImageDisplayer(object):
         self.window.show()
         # Image generator
         self.image_file = None
-        self.images = image_generator(args.src)
+        self.images = image_generator(args.src, args.jump or None)
         # Show first image
         self.show_next_image()
 
@@ -135,6 +138,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-s', '--src', default=cwd, help='Source directory')
     parser.add_argument('-d', '--dst', default='KEEP', help='Destination directory')
+    parser.add_argument('-j', '--jump', default='', help='Jump to')
 
     args = parser.parse_args()
 
