@@ -18,6 +18,10 @@ import sdl2.ext
 
 from collections import OrderedDict
 
+GREEN = '\033[0;32m'
+RED = '\033[0;34m'
+END = '\033[0m'
+
 KEEP_KEYS = { sdl2.SDLK_RETURN }
 UNDO_KEYS = { sdl2.SDLK_BACKSPACE, sdl2.SDLK_u }
 QUIT_KEYS = { sdl2.SDLK_ESCAPE, sdl2.SDLK_q }
@@ -41,7 +45,7 @@ def image_generator(src, jump):
 def Action_CopyToDirectory(image_file, args):
     dest_path = os.path.join(args.dst, os.path.basename(image_file))
 
-    print(f'Copying: {dest_path}')
+    print(f'{GREEN}Copying{END}: {dest_path}')
 
     while os.path.exists(dest_path):
         base, _, ext = dest_path.rpartition('.')
@@ -58,7 +62,7 @@ def Action_CopyToDirectory(image_file, args):
     shutil.copy2(image_file, dest_path)
 
     def undo():
-        print(f'Removing {dest_path}')
+        print(f'{RED}Removing{END}: {dest_path}')
         pathlib.Path.unlink(dest_path)
 
     return undo
