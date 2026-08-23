@@ -19,6 +19,7 @@ import sdl2.ext
 from collections import OrderedDict
 
 KEEP_KEY = sdl2.SDLK_RETURN
+UNDO_KEY = sdl2.SDLK_u
 
 sdl2.ext.init()
 
@@ -75,8 +76,11 @@ class ImageDisplayer(object):
         self.action = Action_CopyToDirectory
         self.actions = OrderedDict()
 
+        self.undo_level = 0
+
         # Image generator
         self.image_file = None
+        self.image = None
         self.images = image_generator(args.src, args.jump or None)
         # Show first image
         self.show_next_image()
@@ -105,33 +109,53 @@ class ImageDisplayer(object):
 
     def show_next_image(self):
         try:
-            image = None
+            if self.undo_level > 0:
+                self.undo_level -= 1
+                self.update_undo()
+            else:
+                while True:
+                    self.image_file, self.image = next(self.images)
+                    p = subprocess.run(['md5sum', self.image_file], stdout=subprocess.PIPE)
+                    md5 = p.stdout.split(b' ')[0].strip()
+                    if md5 in self.md5s:
+                        print(f'Skipping duplicate: {self.image_file}')
+                        continue
+                    self.md5s.add(md5)
+                    break
 
-            while True:
-                self.image_file, image = next(self.images)
-                p = subprocess.run(['md5sum', self.image_file], stdout=subprocess.PIPE)
-                md5 = p.stdout.split(b' ')[0].strip()
-                if md5 in self.md5s:
-                    print(f'Skipping duplicate: {self.image_file}')
-                    continue
-                self.md5s.add(md5)
-                break
-
-            print(f'Showing: {self.image_file}')
-            self.actions[self.image_file] = None
-
-            sdl2.ext.fill(self.window.get_surface(), 0)
-            sdl2.SDL_BlitScaled(image, None, self.window.get_surface(), self.find_scaled_dstrect(image))
-            time.sleep(0.05)  # FIXME: It seems there's a race condiion on displaying the first image correctly...
-            sdl2.SDL_UpdateWindowSurface(self.window.window)
-            sdl2.SDL_FreeSurface(image)
+                self.actions[self.image_file] = None
+                self.show_image()
         except StopIteration:
             return False
         return True
 
+    def show_image(self):
+        print(f'Showing: {self.image_file}')
+
+        image = self.image
+
+        sdl2.ext.fill(self.window.get_surface(), 0)
+        sdl2.SDL_BlitScaled(image, None, self.window.get_surface(), self.find_scaled_dstrect(image))
+        time.sleep(0.05)  # FIXME: It seems there's a race condiion on displaying the first image correctly...
+        sdl2.SDL_UpdateWindowSurface(self.window.window)
+        sdl2.SDL_FreeSurface(image)
+
     def action_image(self):
         print(f'Actioning: {self.image_file}')
         self.actions[self.image_file] = self.action(self.image_file, args)
+
+    def undo(self):
+        self.undo_level += 1
+        self.update_undo()
+        undo_action = self.actions[self.image_file]
+        if undo_action is not None:
+            undo_action()
+            self.actions[self.image_file] = None
+
+    def update_undo(self):
+        self.image_file = list(self.actions.keys())[-self.undo_level - 1]
+        self.image = sdl2.ext.load_image(self.image_file)
+        self.show_image()
 
 
 def run(args):
@@ -144,9 +168,12 @@ def run(args):
                 running = False
             elif event.type == sdl2.SDL_KEYDOWN:
                 keysym = event.key.keysym.sym
-                if keysym == KEEP_KEY:
-                    displayer.action_image()
-                running = displayer.show_next_image()
+                if keysym == UNDO_KEY:
+                    displayer.undo()
+                else:
+                    if keysym == KEEP_KEY:
+                        displayer.action_image()
+                    running = displayer.show_next_image()
 
 
 if __name__ == '__main__':
