@@ -81,6 +81,8 @@ class ImageDisplayer(object):
                 self.md5s.add(md5)
                 break
 
+            print(f'Showing: {self.image_file}')
+
             sdl2.ext.fill(self.window.get_surface(), 0)
             sdl2.SDL_BlitScaled(image, None, self.window.get_surface(), self.find_scaled_dstrect(image))
             time.sleep(0.05)  # FIXME: It seems there's a race condiion on displaying the first image correctly...
@@ -106,6 +108,8 @@ class ImageDisplayer(object):
 
             dest_path = '.'.join([base, ext])
 
+
+        print(f'Saving: {dest_path}')
         shutil.copy2(self.image_file, dest_path)
 
 
